@@ -1,24 +1,22 @@
-FLAGS := -Wunused-variable -Wreturn-type
-
-filenames := test1.o http_server.o test1
-files := $(strip $(foreach f,$(filenames),$(wildcard $(f))))
+FLAGS := -pthread -Wunused-variable -Wreturn-type
 
 build: clean http_server.o
 
 test: clean debug http_server.o test1.o
-	g++ -g -o test1 test1.o http_server.o
+	g++ $(FLAGS) test1.o http_server.o -o test1
+	$(MAKE) cleano
 
 test1.o:
-	g++ -g -c -pthread $(FLAGS) -Isrc test/test1.cpp
+	g++ -c $(FLAGS) -Isrc test/test1.cpp
 
 http_server.o:
-	g++ -g -c -pthread $(FLAGS) -Isrc src/http_server.cpp
+	g++ -c $(FLAGS) -Isrc src/http_server.cpp
 
-.PHONY: debug
 debug:
-	$(eval FLAGS += -DDEBUG)
+	$(eval FLAGS += -g -DDEBUG)
 
-clean:
-ifneq ($(files),)
-	rm -f $(files)
-endif
+clean: cleano
+	rm -f test1 http_server
+
+cleano:
+	rm -f *.o
