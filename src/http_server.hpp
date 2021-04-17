@@ -56,11 +56,11 @@ private:
     bool processRequest();
 
     bool parseData(
-        const char* reqData,
+        const char*const reqData,
         const long read,
         request_t* requestt,
         headers_t* headerst,
-        char** body
+        char**const body
     );
 
     bool parseStartLine(const char* reqData, request_t* requestt);

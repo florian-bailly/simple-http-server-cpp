@@ -89,7 +89,8 @@ bool HttpServer::listen() {
  */
 bool HttpServer::processRequest()
 {
-    char buffer[HTTP_MAX_BUFFER_LEN] = {0};
+    char* buffer = (char*)malloc(sizeof(char) * HTTP_MAX_BUFFER_LEN);
+
     long valread = read(this->activeSocket, buffer, HTTP_MAX_BUFFER_LEN);
 #if DEBUG
     printf("%.*s\n\n", valread, buffer);
@@ -122,7 +123,9 @@ bool HttpServer::processRequest()
     }
     free(headerst.headers);
 
-    free(*body);
+    if (*body != NULL) {
+        free(*body);
+    }
     free(body);
 
     return true;
@@ -167,7 +170,7 @@ int HttpServer::response(
 
     uint size = hdrPosTail + HttpServer::SEP_LEN + bodyLen;
 
-    char resp[size];
+    char* resp = (char*)malloc(sizeof(char) * size);
     memcpy(resp, headersBuff, hdrPosTail);
 
     if (bodyLen > 0) {
@@ -175,18 +178,21 @@ int HttpServer::response(
         memcpy(&resp[hdrPosTail + HttpServer::SEP_LEN], body, bodyLen + 1); // \0
     }
 
-    return write(this->activeSocket, resp, size);
+    size_t written = write(this->activeSocket, resp, size);
+    free(resp);
+
+    return written;
 }
 
 /**
  * Parses the given request data (into structs + body).
  */
 bool HttpServer::parseData(
-    const char* reqData,
+    const char*const reqData,
     const long read,
     request_t* requestt,
     headers_t* headerst,
-    char** body
+    char**const body
 ) {
     const char* headerBodySep = "\r\n\r\n";
 
@@ -228,7 +234,7 @@ bool HttpServer::parseData(
         printf("body[%d]: %s\n", bodyLen, *body);
 #endif
     } else {
-        body = NULL;
+        *body = NULL;
     }
 
     return true;
